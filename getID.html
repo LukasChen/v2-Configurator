@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>This is a index.html</title>
+    <script type="text/javascript" src="js/angular.min.js"></script>
+    <script>
+    	angular.module('idApp',[])
+    	.controller('idController', function ($scope,$http) {
+
+    		$scope.data = {};
+
+    		$http.get('init.json').then(function(res) {
+    		    $scope.data = res.data;
+    		    //console.log($scope.data);
+    		    $scope.buttonIdList = [];
+
+                $scope.sectionIdList = [];
+
+    		    $scope.buttonNumber = 0;
+
+                $scope.sectionNumber = 0;
+
+    		    angular.forEach($scope.data,function(chapter) {
+    		    	angular.forEach(chapter.data,function(section) {
+                        if(section.name) {
+                            section.id = section.id.replace('SID-','');
+
+                            $scope.sectionIdList.push({name:section.name,id:parseInt(section.id)});
+                            $scope.sectionNumber++;
+                        }
+    		    		angular.forEach(section.yourChoice, function(choice) {
+    		    			if(choice.id) {
+	    		    			console.log(choice.id);
+                                choice.id = choice.id.replace('ID-','');
+
+	    		    			$scope.buttonIdList.push({name:choice.name,id:parseInt(choice.id)});
+	    		    			$scope.buttonNumber++;
+	    		    		}
+    		    		});
+    		    	});
+    		    });
+    		});
+    	})
+    </script>
+</head>
+<body ng-app="idApp" ng-controller="idController">
+	<h2>button {{buttonNumber}}</h2>
+	<ul>
+		<li ng-repeat="buttonId in buttonIdList | orderBy:'-id'">{{buttonId.id}} - {{buttonId.name}}</li>
+	</ul>
+	<h2>section {{sectionNumber}}</h2>
+    <ul>
+        <li ng-repeat="sectionId in sectionIdList | orderBy:'-id'">{{sectionId.id}} - {{sectionId.name}}</li>
+    </ul>
+</body>
+</html>

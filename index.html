@@ -11,9 +11,12 @@
     <link rel="stylesheet" type="text/css" href="css/screen.css">
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <script type="text/javascript" src="js/jquery-2.1.3.min.js"></script>
-    <script type="text/javascript" src="js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.js"></script>
     <script type="text/javascript" src="js/angular.min.js"></script>
+    <script type="text/javascript" src="js/angular-sanitize.min.js"></script>
+    <script type="text/javascript" src="js/angular-animate.min.js"></script>
     <script type="text/javascript" src="controller/Configurator.js"></script>
+    <base target="_blank">
 </head>
 
 <body ng-app="configApp" ng-controller="myCtrl">
@@ -34,46 +37,54 @@
         <div class="container">
             <div class="row">
                 <div class="col-md-8 col-lg-9" id="configurator">
-                    <h1 id="check-me-out">ViCase & ViDock Configuration</h1>
-                    <div ng-repeat="Chapter in data" class="panel panel-default">
-                        <div ng-click="toggle($event)" class="panel-heading con-fig-header">
-                            <h2><i class="fa fa-play"></i> {{Chapter.name}}</h2>
-                            <p style="color:#FFF" ng-if="Chapter.name == '1. Ready Configs'">Choose your Use Case, Performance, Form Factor and Number of Displays and press "Render Preview"</p>
+                    <h1 id="check-me-out" class="clearfix">V²Configuration <span class="float-right" data-toggle="modal" data-target="#ConfigurationHelp"><i data-toggle="tooltip" data-placement="top" title="Help" class="fa fa-question-circle useCase"></i></span></h1>
+                    <Chapter ng-repeat="Chapter in data" class="panel panel-default {{Chapter.class}}" ng-init="chapterIndex=$index">
+
+                        <div ng-click="ChapterCollapse =! ChapterCollapse" class="panel-heading con-fig-header">
+                            <h2><i ng-class="{'fa-rotate-90':!ChapterCollapse}" class="fa fa-play"></i> {{::Chapter.name}}</h2>
                         </div>
-                        <div style="display:none" class="panel-body collapsable" ng-init="chapterIndex=$index" id="chapter-{{$index}}">
-                            <div id="ViCase" ng-repeat="Section in Chapter.data" ng-init="sectionIndex=$index">
+
+                        <div uib-collapse="ChapterCollapse" padding="15px"
+                        class="panel-body" id="chapter-{{$index}}">
+
+
+                            <Section ng-repeat="Section in Chapter.data" ng-init="sectionIndex=$index" ng-class="{'displayNone':Section.Config,'config':Section.Config}"
+                            class="configirator-section {{sectionIndex}}" id="{{Section.id}}">
+
+                              <!--thumbnail-->
                                 <div class="col-sm-2 ">
-                                    <img ng-if="cart[Chapter.name][Section.name].lastclickedImg" ng-src="{{cart[Chapter.name][Section.name].lastclickedImg}}">
+                                    <img ng-if="cart[Chapter.id][Section.id].lastclickedImg" ng-src="{{cart[Chapter.id][Section.id].lastclickedImg}}">
                                 </div>
                                 <!--
                                Chapter = chapters
                                Section = Sections
                            -->
                                 <div class="col-sm-10">
-                                    <h3 ng-click="toggle($event)" class="sub-sectionToggle"><span><i class="fa fa-play"></i> {{Section.name}}</span></h3>
-                                    <div class="collapsable" style="display:none">
+                                    <h3 ng-click="SectionCollapse =!SectionCollapse" class="sub-sectionToggle"><span><i ng-class="{'fa-rotate-90':!SectionCollapse}" class="fa fa-play"></i> {{::Section.name}}</span></h3>
+                                    <div uib-collapse="SectionCollapse">
                                         <!-- your choice -->
-                                        <h4 ng-click="toggle($event)" class="fake-link readmore_button block-link open"><i class="fa fa-play fa-rotate-90"></i> Your Choice</h4>
-                                        <div class="readmore_area show-first open radio_button collapsable">
-                                            <div ng-if="Section.name=='Use Cases'">
-                                                <div ng-repeat="choice in Section.yourChoice" class="col-sm-4 well useCase">
+                                        <h4 ng-click="ChoiceCollapse = !ChoiceCollapse" class="fake-link readmore_button block-link open"><i ng-class="{'fa-rotate-90':!ChoiceCollapse}" class="fa fa-play fa-rotate-90"></i> Your Choice</h4>
+                                        <div class="readmore_area show-first open radio_button" uib-collapse="ChoiceCollapse">
+                                            <div ng-if="Section.name=='Field of Application'">
+                                                <div ng-repeat="choice in Section.yourChoice" class="col-sm-4 well useCase" ng-click="radioClick(choice,Chapter.id,Section.id,choice.Child_Name,'hide section')">
                                                     <label>
-                                                        <input type="radio" name="{{Chapter.name + Section.name}}" style="display:none" ng-init="initIndex(Chapter.name,Section.name,choice)" ng-click="radioClick(choice,Chapter.name,Section.name,choice.Child_Name,true)"> 
-                                                        {{ choice.name }}
+                                                        <input type="radio" name="{{Chapter.name + Section.name}}" style="display:none" ng-init="initIndex(Chapter.id,Chapter.name,Section.id,Section.name,choice)"/>
+                                                        <p class="text-center" ng-bind-html="choice.name"></p>
                                                     </label>
                                                 </div>
                                             </div>
                                             <!-- readyconfig -->
-                                            <div ng-if="Section.name=='Performance'">
-                                                <div style="display:none" class="readyConfig" ng-repeat="choice in Section.yourChoice">
+                                            <div ng-if="Section.Config">
+                                                <div class="readyConfig" ng-repeat="choice in Section.yourChoice">
                                                     <label>
-                                                    <input type="radio" ng-click="readyConfig($event,true)" for="{{choice.for}}" id="{{choice.id}}" name="{{Chapter.name + Section.name}}" value="{{choice.value}}"><span type="button"></span><span data-toggle="tooltip" data-placement="right">{{choice.name}}</span></label>
+                                                    <input type="radio" ng-click="readyConfig($event,true)" for="{{choice.for}}" id="{{choice.id}}" name="{{Chapter.name + Section.name}}" value="{{choice.value}}"><span type="button"></span><span data-toggle="tooltip" data-placement="right">{{::choice.name}}</span> <span style="color:#bbb;" ng-bind-html="choice.tag"></span></label>
                                                 </div>
                                                 </div>
                                                 <div ng-if="Section.name == 'Form Factor'">
                                                     <div ng-repeat="choice in Section.yourChoice">
                                                     <label>
-                                                    <input type="radio" ng-init="initIndex(Chapter.name,Section.name,choice)" ng-click="readyConfig($event,false);radioClick(choice,Chapter.name,Section.name,choice.Child_Name,false)" for="{{choice.for}}" id="{{choice.id}}" name="{{Chapter.name + Section.name}}" value="{{choice.value}}"><span type="button"></span><span data-toggle="tooltip" data-placement="right">{{choice.name}}</span></label>
+                                                    <input type="radio" ng-init="initIndex(Chapter.id,Chapter.name,Section.id,Section.name,choice)" ng-click="readyConfig($event,false);radioClick(choice,Chapter.id,Section.id,choice.Child_Name,'disable button',Chapter.name + Section.name,chapterIndex,sectionIndex)" for="{{choice.for}}" id="{{choice.id}}" name="{{Chapter.name + Section.name}}" value="{{choice.value}}"><span type="button"></span><span data-toggle="tooltip" data-placement="right">{{::choice.name}}</span>
+                                                    <span style="color:#bbb;">{{::choice.tag}}</span></label>
                                                     </div>
                                                 </div>
                                                 <div ng-if="Section.name == 'Preview'">
@@ -96,22 +107,36 @@
                                                     </div>
                                                 </div>
                                                 <div ng-if="Section.name == 'Save and Load My Config'">
-                                                    <button class="btn btn-primary" ng-click="makeJSON()"> <i class="fa fa-cart-arrow-down"></i> Save My Config</button>
+                                                    <div class="row">
+                                                    <div class="col-sm-3">
+                                                    <button class="btn btn-success" ng-click="makeJSON()" data-toggle="modal" data-target="#SaveModal"> <i class="fa fa-clipboard"></i> Save My Config</button></div>
+                                                    <div class="col-sm-3">
+                                                    <button class="btn btn-primary" data-toggle="modal" data-target="#loadModal"><i class="fa fa-upload"></i> Load Config &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</button></div></div>
                                                 </div>
 
-                                            
+
                                             <!--End ReadyConfig-->
 
                                             <!--Choice = radio buttons-->
 
                                             <!--Normal Choice-->
-                                            <div ng-if="Section.name!='Performance' && Section.name!='Use Cases' && Section.name != 'Form Factor'" ng-repeat="choice in Section.yourChoice">
+                                            <div ng-if="Section.Config != true && Section.name!='Field of Application' && Section.name != 'Form Factor'" ng-repeat="choice in Section.yourChoice">
                                                 <label>
-                                                    <input buttondir class="normal-radio" type="radio" ng-init="initIndex(Chapter.name,Section.name,choice)" ng-click="radioClick(choice,Chapter.name,Section.name,choice.Child_Name,false)" data-child="{{ choice.Child_Name }}" id="{{choice.id}}" name="{{Chapter.name + Section.name}}"><span type="button"></span><span>{{choice.name}}<span ng-if="choice.value!= 0"> - {{choice.value | currency}}</span></span></label>
+                                                    <input buttondir class="normal-radio" type="radio" ng-init="initIndex(Chapter.id,Chapter.name,Section.id,Section.name,choice,Chapter.name + Section.name,$index)" ng-click="radioClick(choice,Chapter.id,Section.id,choice.Child_Name,'disable button',Chapter.name + Section.name,chapterIndex,sectionIndex)"
+                                                    id="{{choice.id}}" name="{{Chapter.name + Section.name}}">
+                                                    <!--Button-->
+                                                    <span type="button"></span>
+                                                    <!--button text and price-->
+                                                    <span style="padding-right:10px;">{{::choice.name}}
+                                                      <span ng-if="choice.value!= 0"> - ${{::choice.value}}</span>
+                                                    </span>
+                                                    <!--button tag-->
+                                                    <span style="color:#bbb;">{{::choice.tag}}</span>
+                                                </label>
                                             </div>
-                                            <div ng-if="Section.name!='Performance' && Section.name!='Use Cases' && Section.name != 'Form Factor' && Section.name != 'Preview'" ng-class="{'displayNone' : Section.noNone == true}">
+                                            <div ng-if="Section.Config != true && Section.name!='Field of Application' && Section.name != 'Form Factor' && Section.name != 'Preview' && Section.id != 'ID-556'" ng-class="{'displayNone' : Section.noNone == true}">
                                                 <label>
-                                                    <input type="radio" ng-init="initIndex(Chapter.name,Section.name,'None');choice.name = 'None'" data-child="{{ choice.Child_Name }}" id="{{Section.NoneID}}" ng-click="radioClick(choice,Chapter.name,Section.name,choice.Child_Name,false)" class="None" name="{{Chapter.name + Section.name}}" value="0"><span type="button"></span><span>None</span></label>
+                                                    <input type="radio" ng-init="initIndex(Chapter.id,Chapter.name,Section.id,Section.name,'None',Chapter.name + Section.name,chapterIndex,sectionIndex);choice.name = 'None';choice.value = 0" data-child="{{ choice.Child_Name }}" id="{{Section.NoneID}}" ng-click="radioClick(choice,Chapter.id,Section.id,choice.Child_Name,'disable button',Chapter.name + Section.name,chapterIndex,sectionIndex)" class="None" name="{{Chapter.name + Section.name}}" value="0"><span type="button"></span><span>None</span></label>
                                             </div>
                                             <!--End Normal Choice-->
                                         </div>
@@ -120,19 +145,24 @@
                                             <h4 ng-click="toggle($event)" class="fake-link sub-sectionToggle readmore_button block-link"><i class="fa fa-play"></i> Comparison Table</h4>
                                             <div class="collapsable readmore_area " style="display: none;">
                                                 <div>
-                                                    <table class="table table-striped">
+                                                    <table style="margin-bottom:0" class="table table-striped">
                                                         <thead>
                                                             <tr>
                                                                 <th ng-repeat="heading in Section.TableHeading" class="{{heading.class}}">{{heading.name}}</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            <tr ng-repeat="hi in Section.TableBody">
+                                                            <tr ng-repeat="hi in Section.TableBody" class="{{hi.class}}">
                                                                 <td class="table-left-title">{{hi.title}}</td>
-                                                                <td ng-repeat="rows in hi.row track by $index">{{rows}}</td>
+                                                                <td ng-repeat="rows in hi.row track by $index" ng-bind-html="rows"></td>
                                                             </tr>
                                                         </tbody>
                                                     </table>
+                                                    <div ng-if="Section.TableTag">
+                                                        <ul>
+                                                            <li ng-bind-html="Tag" style="font-size:11;" ng-repeat="Tag in Section.TableTag"></li>
+                                                        </ul>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -141,26 +171,26 @@
                                             <h4 ng-click="toggle($event)" class="fake-link readmore_button block-link"><i class="fa fa-play"></i> Advice</h4>
                                             <div class="collapsable readmore_area" style="display: none;">
                                                 <div ng-repeat="advice in Section.Advice">
-                                                    <h4>{{advice.heading}}</h4>
-                                                    <p>{{advice.content}}</p>
+                                                    <h4 style="color:#bbb;font-weight:600;">{{advice.heading}}</h4>
+                                                    <p ng-bind-html="advice.content"></p>
                                                 </div>
                                             </div>
                                         </div>
                                         <!-- Gallery/Carousel  -->
                                              <div ng-if="Section.Gallery">
                                                 <h4 ng-click="toggle($event)" class="fake-link readmore_button block-link"><i class="fa fa-play"></i> Gallery</h4>
-                                                <div class="collapsable readmore_area" ng-init="initGallery('section-'+chapterIndex+'-gallary-'+$index)" style="display: none;">
-                                                    <div id="{{'section-'+chapterIndex+'-gallary-'+$index}}" class="carousel slide" data-ride="carousel">
+                                                <div class="collapsable readmore_area" style="display: none;">
+                                                    <div id="{{'section-'+chapterIndex+'-gallary-'+$index}}" ng-init="initGallery('section-'+chapterIndex+'-gallary-'+$index)" class="carousel slide" data-ride="carousel">
                                                         <div class="carousel-inner">
                                                             <div ng-repeat="gallery in Section.Gallery" class="item">
-                                                                <h4 style="font-weight:bold">{{gallery.title}}</h4>
+                                                                <h4 style="font-weight:600;color:#bbb">{{gallery.title}}</h4>
                                             							 <p>{{gallery.description}}</p>
                                                                 <img ng-src="{{gallery.image}}">
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div class="clearfix">
-                                                        <div id="{{'section-'+chapterIndex+'-gallary-'+$index+'thumb'}}"  ng-init="initGallery('section-'+chapterIndex+'-gallary-'+$index+'thumb')" class="carousel slide">
+                                                        <div data-interval="false" id="{{'section-'+chapterIndex+'-gallary-'+$index+'thumb'}}"  ng-init="initGallery('section-'+chapterIndex+'-gallary-'+$index+'thumb')" class="carousel slide">
                                                             <div class="carousel-inner">
                                                                 <div ng-repeat="gallery in Section.Gallery" ng-if="$index%4==0" class="item">
                                                                   <div data-target="{{'#section-'+chapterIndex+'-gallary-'+$parent.$parent.$index}}" data-slide-to="{{$index}}" class="thumb"><img ng-src="{{Section.Gallery[$index].image}}"></div>
@@ -179,42 +209,24 @@
                                                             </a>
                                                         </div>
                                                     </div>
-                                                </div>                                     
-                                      </div>    
+                                                </div>
+                                      </div>
                                         <!-- datasheet -->
-                                        <div ng-init="tabs = 0" ng-if="Section.Datasheet">
-                                            <h4 ng-click="toggle($event)" class="fake-link readmore_button block-link"><i class="fa fa-play"></i> Datasheet</h4>
-                                            <div ng-repeat="datasheet in Section.Datasheet" style="display: none;" class="collapsable readmore_area radio-tables">
-                                                <ul class="nav nav-tabs table-tab">
-                                                    <li ng-repeat="buttons in datasheet.button" class="{{buttons.class}}"><a data-toggle="tab" href="#tabSection{{$index+1}}" class="fake-link">{{buttons.name}}</a></li>
+                                        <div ng-if="Section.Datasheet">
+                                            <h4 ng-click="toggle($event);" class="fake-link readmore_button block-link"><i class="fa fa-play"></i> Datasheet</h4>
+                                            <div datasheet ng-repeat="datasheet in Section.Datasheet" style="display: none;" class="collapsable readmore_area radio-tables">
+                                                <ul class="nav nav-tabs">
+                                                    <li ng-repeat="buttons in datasheet.button" class="{{buttons.class}}"><a  ng-click="addTabs($index);" data-toggle="tab" class="fake-link">{{buttons.name}}</a></li>
                                                 </ul>
-                                                <div class="tab-content">
-                                                    <div id="tabSection1" class="tableSection tab-pane fade in active">
+                                                <div>
+                                                    <div ng-if="tabs == $index" ng-repeat="table in datasheet.tables">
                                                         <table class="table table-striped">
                                                             <tbody>
-                                                                <tr ng-repeat="row in datasheet.table1" class="{{row.class}}">
-                                                                    <td class="table-left-title">{{row.name1}}</td>
-                                                                    <td>{{row.name2}} hi</td>
+                                                                <tr ng-repeat="tablerow in table.table" class="{{tablerow.class}}">
+                                                                    <td class="table-left-title">{{tablerow.title}}</td>
+                                                                    <td ng-repeat="row in tablerow.row track by $index" ng-bind-html="row"></td>
                                                                 </tr>
                                                             </tbody>
-                                                        </table>
-                                                    </div>
-                                                    <div id="tabSection2" class="tableSection tab-pane fade">
-                                                        <table class="table table-striped">
-                                                            <tbody>
-                                                                <tr ng-repeat="row in datasheet.table2" class="{{row.class}}">
-                                                                    <td class="table-left-title">{{row.name1}}</td>
-                                                                    <td>{{row.name2}} bye</td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                    <div id="tabSection3" class="tableSection tab-pane fade">
-                                                        <table class="table table-striped">
-                                                            <tr ng-repeat="row in datasheet.table3" class="{{row.class}}">
-                                                                <td class="table-left-title" style="width:20%">{{row.name1}}</td>
-                                                                <td>{{row.name2}}</td>
-                                                            </tr>
                                                         </table>
                                                     </div>
                                                 </div>
@@ -225,23 +237,16 @@
                                 <div class="clearfix"></div>
                                 <hr>
                             </div>
-                        </div>
+                        </Section>
                     </div>
-                </div>
+                </Chapter>
                 <!--               sidebar -->
                 <div class="col-md-4 col-lg-3">
-                    <div class="price-sidebar" data-spy="affix" data-offset-top="560">
-                    <div class="row">
-                    <div class="col-sm-7">
-                        <button style="display:block" data-toggle="modal" data-target="#VillageModal" class="btn btn-primary checkout"><i class="fa fa-cart-arrow-down"></i> Checkout Village</button>
-                    </div>
-                    <div class="col-sm-5" id="right-button-column">
-                        <button style="width:100%" data-toggle="modal" data-target="#ThirdPartyModal" class="btn btn-info checkout"> <i class="fa fa-cart-arrow-down"></i> 3rd Party</button>
-                    </div>
-                    </div>
-                        <div class="collapse-summary" ng-repeat="(chapters, cvalue) in cart" ng-if="chapters!='thirdprtycost'&&chapters!='vtcost'&&chapters!='cost'&&chapters!='count' && chapters!='thirdprtycount' && chapters!='vtcount' && chapters!='1. Ready Configs'">
+                    <div class="price-sidebar" data-spy="affix" data-offset-top="650">
+                    <h1 class="clearfix">V²Summary <span class="float-right" data-toggle="modal" data-target="#SummaryHelp"><i class="fa fa-question-circle useCase" data-toggle="tooltip" data-placement="top" title="Help"></i></span></h1>
+                        <div class="collapse-summary" ng-repeat="(chapters, cvalue) in cart" ng-if="chapters!='thirdprtycost'&&chapters!='vtcost'&&chapters!='cost'&&chapters!='count' && chapters!='thirdprtycount' && chapters!='vtcount' && chapters!='ID-1'">
                             <span ng-if="chapters!='thirdprtycost'&&chapters!='vtcost'&&chapters!='cost'&&chapters!='count' && chapters!='thirdprtycount' && chapters!='vtcount'">
-                           <h4 class="collapse-summary-heading" ng-click="toggle($event)" ><i class="fa fa-play fa-rotate-90"></i> {{chapters}} <span style="float:right">${{cart[chapters].cost}}</span></h4>
+                           <h4 class="collapse-summary-heading fake-link" ng-click="toggle($event)" ><i class="fa fa-play fa-rotate-90"></i> {{cart[chapters].name}} <span style="float:right">${{cart[chapters].cost}}</span></h4>
                            <div class="collapsable">
                               <span   ng-repeat="(sections, svalue) in cart[chapters]">
                               <div ng-if="cart[chapters][sections].lastclicked != 'None'"><span>{{cart[chapters][sections].lastclicked}} </span><span style="float:right" ng-if="cart[chapters][sections].cost != 0 && cart[chapters][sections].cost != null">${{cart[chapters][sections].cost}}</span></div>
@@ -249,13 +254,30 @@
                         </div>
                         </span>
                     </div>
-                    <hr  style="margin-bottom:0">
-                    <h3 class="float-right">
-                        <span style="color:#07b;" ng-bind="cart.cost" id="total"></span> <span style="color:#07b;">US</span>
-                     </h3>
+                    <hr>
+                    <div class="Total-price">
+                        <div ng-click="toggle($event,true)" class="fake-link">
+                            <h4 style="color:#AFAFAF"><i class="fa fa-play"></i> Total Cost</h4>
+                        </div>
+                        <div class="collapsable" style="display:none">
+                            <h5 style="color:#3491CE">Village parts / Indiegogo <span style="float:right">${{cart.vtcost}}</span></h5>
+                            <h5 style="color:#5bc0de;clear:both">3rd Party parts / Amazon <span style="float:right">${{cart.thirdprtycost}}</span></h5>
+                            <hr>
+                            <h5 style="color:#AFAFAF">Total Cost all parts <span style="float:right">${{cart.cost}}</span></h5>
+                            <hr style="clear:both;">
+                            <p style="font-size:11px">This is the total cost of your PC. Bear in mind that most likely most parts are from 3rd Party and that the costs we listed are guide pricing in USA as of November 2015. Cost in your country or at another time may vary.</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                    <div class="col-sm-6">
+                        <button style="display:block;width:100%" data-toggle="modal" data-target="#VillageModal" class="btn btn-primary checkout"><i class="fa fa-cart-arrow-down"></i> Indiegogo<br>Checkout</button>
+                    </div>
+                    <div class="col-sm-6">
+                        <button style="width:100%" data-toggle="modal" data-target="#ThirdPartyModal" class="btn btn-info checkout"> <i class="fa fa-cart-arrow-down"></i> Third Party<br>Checkout</button>
+                    </div>
+                    </div>
                      <div class="clearfix"></div>
-                     <hr style="margin-bottom:2px;margin-top:0">
-                     <hr style="margin-top:0;">
                 </div>
             </div>
         </div>
@@ -283,9 +305,9 @@
           </div>
           <div class="modal-body clearfix">
             <div ng-repeat="(chapters, cvalue) in cart">
-                <div ng-if="chapters!='thirdprtycost'&&chapters!='vtcost'&&chapters!='cost'&&chapters!='count'&&chapters!='3. ViDock'&&chapters!='2. ViCase'&&chapters!='1. Ready Configs' && chapters!='thirdprtycount' && chapters!='vtcount'">
-                    <h4>{{chapters}} <span class="info-color float-right">${{cart[chapters].cost}}</span></h4>
-                    <div ng-repeat="(sections, svalue) in cart[chapters]"><a class="checkout-list" ng-href="{{cart[chapters][sections].lastclickedLink}}">{{cart[chapters][sections].lastclicked}}</a><span style="float:right" ng-if="cart[chapters][sections].cost != 0 && cart[chapters][sections].cost != null">${{cart[chapters][sections].cost}}</span></div>
+                <div ng-if="chapters!='thirdprtycost'&&chapters!='vtcost'&&chapters!='cost'&&chapters!='count'&&chapters!='ID-2'&&chapters!='ID-3'&&chapters!='ID-1' && chapters!='ID-4' && chapters!='ID-5' && chapters!='thirdprtycount' && chapters!='vtcount'">
+                    <h4>{{cart[chapters].name}} <span class="info-color float-right">${{cart[chapters].cost}}</span></h4>
+                    <div ng-repeat="(sections, svalue) in cart[chapters]"><a class="checkout-list" target="_blank" ng-href="{{cart[chapters][sections].lastclickedLink}}">{{cart[chapters][sections].lastclicked}}</a><span style="float:right" ng-if="cart[chapters][sections].cost != 0 && cart[chapters][sections].cost != null">${{cart[chapters][sections].cost}}</span></div>
                 </div>
             </div>
             <div class="float-right">
@@ -303,18 +325,276 @@
         <div class="modal-content">
           <div class="modal-header" id="VillageHeader">
             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i style="color:#FFF" class="fa fa-times fa-inverse"></i></span></button>
-            <h4 class="modal-title" id="myModalLabel">Checkout Village Parts (<span>{{cart.vtcount}} items</span>)</h4>
+            <h4 class="modal-title" id="myModalLabel">Indiegogo Check Out of ViCase and ViDock <span data-toggle="modal" data-target="#villageHelp" class="pull-right fake-link" style="padding-right:10px;"><i class="fa fa-question-circle"></i></span></h4>
           </div>
           <div class="modal-body clearfix">
-            <div ng-repeat="(chapters, cvalue) in cart">
-                <div ng-if="chapters!='thirdprtycost'&&chapters!='vtcost'&&chapters!='cost'&&chapters!='count'&&chapters!='4. PC Parts'&&chapters!='5. Accessories'&&chapters!='1. Ready Configs' && chapters!='thirdprtycount' && chapters!='vtcount'">
-                    <h4>{{chapters}} <span class="theme-color float-right">${{cart[chapters].cost}}</span></h4>
-                    <div ng-repeat="(sections, svalue) in cart[chapters]"><a class="checkout-list" ng-href="{{cart[chapters][sections].lastclickedLink}}">{{cart[chapters][sections].lastclicked}}</a><span style="float:right" ng-if="cart[chapters][sections].cost != 0 && cart[chapters][sections].cost != null">${{cart[chapters][sections].cost}}</span></div>
+            <!--<div ng-repeat="(chapters, cvalue) in cart">
+                <div ng-if="chapters!='thirdprtycost'&&chapters!='vtcost'&&chapters!='cost'&&chapters!='count'&&chapters!='ID-6'&&chapters!='ID-7'&&chapters!='ID-1' && chapters!='thirdprtycount' && chapters!='vtcount'">
+                    <h4>{{cart[chapters].name}} <span class="theme-color float-right">${{cart[chapters].cost}}</span></h4>
+                    <div ng-repeat="(sections, svalue) in cart[chapters]"><a class="checkout-list" target="_blank" ng-href="{{cart[chapters][sections].lastclickedLink}}">{{cart[chapters][sections].lastclicked}}</a><span style="float:right" ng-if="cart[chapters][sections].cost != 0 && cart[chapters][sections].cost != null">${{cart[chapters][sections].cost}}</span></div>
                 </div>
             </div>
             <br>
             <div class="float-right">
                 <h4 class="theme-color">${{cart.vtcost}}</h4>
+            </div>-->
+            <div style="margin-bottom:40px;">
+            <h3>ViCase Perk of <a href="https://www.indiegogo.com/projects/vicase-a-small-silent-full-desktop-powerhouse/x/6895057#/">ViCase Campaign</a></h3>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th>ViCase Model</th>
+                    <th>Perk discount option</th>
+                    <th>Ship Date</th>
+                    <th>Price</th>
+                    <th>Discount</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr ng-repeat="product in ViCaseMain | orderBy : '-name'">
+                    <td>{{product.name}}</td>
+                    <td><a ng-href="{{product.PerkLink}}">{{product.PerkName}}</a></td>
+                    <td>May 2016</td>
+                    <td>${{product.price}}</td>
+                    <td>${{product.Discount}}</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+            <div style="margin-bottom:40px;">
+            <h3>ViCase Extra Perk of <a href="https://www.indiegogo.com/projects/vicase-a-small-silent-full-desktop-powerhouse/x/6895057#/">ViCase Campaign</a></h3>
+            <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>ViCase Model</th>
+                <th>Ship Date</th>
+                <th>Price</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="product in ViCaseProducts | orderBy : '-position' : true" ng-if="product.name != 'None'">
+                <td>{{product.name}}</td>
+                <td>May 2016</td>
+                <td>${{product.price}}</td>
+              </tr>
+              <tr>
+                  <td colspan="2">Total Cost of ViCase Extra</td>
+                  <td>${{ViCaseProductsTotal}}</td>
+              </tr>
+              </tbody>
+            </table>
+
+            <p>Step 1: Pay ViCase Extras cost with: <a href="https://www.indiegogo.com/projects/vicase-a-small-silent-full-desktop-powerhouse/contributions/new/#/contribute?perk_amt=1&perk_id=3252196">ViCase Extra Perk</a> in the Gift Field.</p>
+            <p>Step 2: Send us an email following <a href="" data-toggle="modal" data-target="#VillageModalEmail">these instructions</a> with your configuration</p>
+
+            </div>
+
+            <div style="margin-bottom:40px;">
+
+            <h3>ViDock Perk of <a href="https://www.indiegogo.com/project/preview/ef5743ad">ViDock Campaign</a></h3>
+            <table class="table table-striped">
+             <thead>
+                <tr>
+                    <th>ViDock Model</th>
+                    <th>Perk discount option</th>
+                    <th>Ship Date</th>
+                    <th>Price</th>
+                    <th>Discount</th>
+                </tr>
+                 </thead>
+                 <tbody>
+                <tr ng-repeat="product in ViDockMain | orderBy : '-name'">
+                    <td>{{product.name}}</td>
+                    <td><a ng-href="{{product.PerkLink}}">{{product.PerkName}}</a></td>
+                    <td>September 2016</td>
+                    <td>${{product.price}}</td>
+                    <td>${{product.Discount}}</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+
+            <div>
+
+            <h3>ViDock Extra Perk of <a href="https://www.indiegogo.com/project/preview/ef5743ad">ViDock Campaign</a></h3>
+            <table class="table table-striped">
+             <thead>
+              <tr>
+                <th>ViDock Model</th>
+                <th>Ship Date</th>
+                <th>Price</th>
+              </tr>
+               </thead>
+               <tbody>
+              <tr ng-repeat="product in ViDockProducts | orderBy : '-position' : true" ng-if="product.name != 'None'">
+                <td>{{product.name}}</td>
+                <td>September 2016</td>
+                <td>${{product.price}}</td>
+              </tr>
+              <tr>
+                  <td colspan="2">Total Cost of ViDock Extra</td>
+                  <td>${{ViDockProductsTotal}}</td>
+              </tr>
+              </tbody>
+            </table>
+            <p>Pay ViDock Extras cost with: <a href="javascript:void(0);">ViDock Extra Perk in the Gift Field</a>.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="loadModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header" id="VillageHeader">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i style="color:#FFF" class="fa fa-times fa-inverse"></i></span></button>
+            <h4 class="modal-title" id="myModalLabel">Load Config</h4>
+          </div>
+          <div class="modal-body clearfix">
+            <textarea style="width: 565px; height: 74px;display:block;" type="text" ng-model="loadConfigField" placeholder="Place Config Here"></textarea><br>
+            <p style="color:#AFAFAF"><i class="fa fa-question-circle" style="color:#f3950f"></i> Configurations can be saved or shared. Paste your configuration in the Text Area above and press the "Load Config" Button. This will load the configuration of the Text Area - overwriting your current one. If you first want to save the current configuration simply use the "Save My Config" button. This is one example how a configuration looks like:<br>
+            ID-87,#ID-2,#ID-4,#ID-10,#ID-28,#ID-31,#ID-34,#ID-41,#ID-47</p>
+            <button style="float:right" class="btn btn-primary" ng-click="loadConfig(loadConfigField)">Load Config</button>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <div class="modal fade" id="SaveModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header" id="VillageHeader">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i style="color:#FFF" class="fa fa-times fa-inverse"></i></span></button>
+            <h4 class="modal-title" id="myModalLabel">Save Config</h4>
+          </div>
+          <div class="modal-body clearfix">
+            <textarea style="width: 565px; height: 74px;display:block;" type="text" ng-model="saveConfigField"></textarea>
+            <p style="color:#AFAFAF"><i style="color:#f3950f" class="fa fa-question-circle"></i> This is your configuration. Copy it to your clipboard. Now you can either 1) paste it into an email, forum or our Indiegogo Campaign Comments section to get help or advice 2) save it in a text document so you can load it later to continue your session</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <div class="modal fade" id="ConfigurationHelp" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header" id="VillageHeader">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i style="color:#FFF" class="fa fa-times fa-inverse"></i></span></button>
+            <h4 class="modal-title" id="myModalLabel">Help V²Configuration</h4>
+          </div>
+          <div class="modal-body clearfix">
+            <h2>V²Configuration Pane</h2>
+            <p>The left pane of the V²Configurator assists you in making choices which in turn will create your Custom PC's Configuration.</p>
+            <h2>First choose your Field of Application</h2>
+            <p>Navigate to Field of Application. 1) Unfold Wizard, 2) Unfold "Field of Application</p>
+            <h2>For more Information read Advice</h2>
+            <p>Within the "Field of Application" unfold Advice and it will guide you on how to proceed. In fact every section that you unfold contains Advice, ready at your fingertip in case you need it.</p>
+            <h2>If there is a Triangle you can unfold it</h2>
+            <p>Its kind of like Easter Eggs. We have hidden a lot of goodies. Click the triangle to unfold.</p>
+            <h2>Navigate by unfolding and collapsing</h2>
+            <p>By unfolding you dig deeper. You can unfold as many Chapters, Sections and Sub Sections as you like. When collapsing the parent the Configurator will remember the state of folding for its children. In case you get lost, collapse and scroll up to reach the top level, from where you can dig down again.</p>
+            <h2>Color Code</h2>
+            <p>The 1. Chapter (Orange) is the Wizard. With a few clicks you determine the broad strokes of your configuration. Chapter 2 ... 5 are the Parts provided by us (Blue). Chapter 6 ... 7 (Cyan) contain the parts provided by Third Parties, such as Amazon / Newegg or your favorite shop for PC parts.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="SummaryHelp" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header" id="VillageHeader">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i style="color:#FFF" class="fa fa-times fa-inverse"></i></span></button>
+            <h4 class="modal-title" id="myModalLabel">Help V²Summary</h4>
+          </div>
+          <div class="modal-body clearfix">
+            <h2>V²Summary Pane</h2>
+            <p>This Pane shows all your parts which your Custom PC will be made off. On a wide screen it is shown to the right. On a small screen to the bottom of the page.</p>
+            <h2>Sub-Summaries</h2>
+            <p>For you convenience the costs are grouped. Each group can be unfolded or collapsed to assist your overview.</p>
+            <h2>Total Cost</h2>
+            <p>Total cost is shown on the bottom. Please read the disclaimer when unfolded to avoid any confusion.</p>
+            <h2>Check Out</h2>
+            <p>Pressing the Checkout Button opens the Checkout Window, which list all items. When clicking the item a new tab opens with its online shop page. Within the "Checkout Village Parts" window all links will open our parts on Indiegogo. Within the "Checkout Third Party" Window all links will open the respective 3rd Party Parts on Amazon or Newegg. We have no association with either shop. You are welcome to buy the same or similar part in another shop of your preference.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="villageHelp" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header" id="VillageHeader">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i style="color:#FFF" class="fa fa-times fa-inverse"></i></span></button>
+            <h4 class="modal-title" id="myModalLabel">Help Indiegogo Checkout</h4>
+          </div>
+          <div class="modal-body clearfix">
+            <h2>What is an Indiegogo Checkout?</h2>
+            <p>Indiegogo is the leading world wide fundraising site. In our case it helps us to raise the funds to put ViCase and ViDock into production. You configured your ViCase / ViDock. In this Indiegogo Checkout window you will click the links to the corresponding perks on the corresponding Indiegogo Campaign to back the perk.</p>
+            <h2>Why put ViCase & ViDock on Indiegogo?</h2>
+            <p>Indiegogo with its community helps ViCase and ViDock to gain popularity. In turn more people back the campaign. In turn our production benefit from economy of scale. Larger production leads to lower production costs, which we pass on to you. In turn you enjoy much lower pricing for our products on Indiegogo.</p>
+            <h2>How to check out ViCase</h2>
+            <p>You see three options of Perks for your ViCase in the column "Perk Discount Option". Each with a link to the corresponding Perk on the ViCase Campaign. Click on link to the Perk of your choice. The Perk will open in a new Tab. Now you are in the Indiegogo Perk Check out. Simply follow its instructions.</p>
+            <h2>How to check out ViCase Extras</h2>
+            <p>In case you selected ViCase Extras, repeat the same procedure. To simplify your life we listed all items in the table "ViCase Extra Perk and we computed the Total Cost of all ViCase Extra Items. You can pay for them clicking on the link "ViCase Extra Perk". Enter the Total Cost of ViCase Extra into the "Gift" field of that perk and follow the Indiegogo procedure.</p>
+            <h2>How to check out ViDock</h2>
+            <p>Until Dec.7. the Indiegogo ViDock Early Bird Campaign is only in preview mode. Only after we publish the campaign on Dec.7. you can back</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal fade" id="VillageModalEmail" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header" id="VillageHeader">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true"><i style="color:#FFF" class="fa fa-times fa-inverse"></i></span></button>
+            <h4 class="modal-title" id="myModalLabel">Send an email to sales@villagetronic.com with a copy of the text below:</h4>
+          </div>
+          <div class="modal-body clearfix">
+            <div style="margin-bottom:40px;">
+            <h3>ViCase Extra Perk of <a href="javascript:void(0);">ViCase Campaign</a></h3>
+            <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>ViCase Model</th>
+                <th>Ship Date</th>
+                <th>Price</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr ng-repeat="product in ViCaseProducts | orderBy : '-position' : true" ng-if="product.name != 'None'">
+                <td>{{product.name}}</td>
+                <td>May 2016</td>
+                <td>${{product.price}}</td>
+              </tr>
+              <tr>
+                  <td colspan="2">Total Cost of ViCase Extra</td>
+                  <td>${{ViCaseProductsTotal}}</td>
+              </tr>
+              </tbody>
+            </table>
+
+
             </div>
           </div>
           <div class="modal-footer">
